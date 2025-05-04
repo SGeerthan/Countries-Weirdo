@@ -20,6 +20,7 @@ function Header() {
             Explorer
           </h1>
         </Link>
+
         {/* Hamburger and Menu Section */}
         <nav className="relative">
           {/* Hamburger Icon for small screens */}
@@ -37,7 +38,7 @@ function Header() {
               <li>
                 <Link
                   to="/login"
-                  className="text-black-500 hover:text-black-600 "
+                  className="text-black-500 hover:text-black-600"
                 >
                   LOGIN
                 </Link>
@@ -58,8 +59,18 @@ function Header() {
                   ABOUT PAGE
                 </Link>
               </li>
-             
             </ul>
+
+            {/* ✕ Close Button at bottom for mobile view */}
+            <div className="absolute bottom-6 left-0 w-full flex justify-center sm:hidden">
+              <Link
+                to="/"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-xl text-gray-800 border border-gray-300 px-6 py-2 rounded-full hover:bg-gray-100 transition"
+              >
+                ✕ Close
+              </Link>
+            </div>
           </div>
         </nav>
       </div>
