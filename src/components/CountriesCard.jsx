@@ -7,7 +7,6 @@ const CountriesCard = ({ image, name, population, region, capital }) => {
   const [user, setUser] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Listen for auth changes
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((u) => {
       setUser(u);
@@ -49,7 +48,7 @@ const CountriesCard = ({ image, name, population, region, capital }) => {
       title: "Add to Favorites",
       html: `
         <label for="comment" class="swal2-input-label">Comment:</label>
-        <input type="text" id="comment" class="swal2-input" placeholder="Your thoughts..." rows="3"/>
+        <input type="text" id="comment" class="swal2-input" placeholder="Your thoughts..."/>
         <label for="rating" class="swal2-input-label">Rating (1-5):</label>
         <input id="rating" class="swal2-input" type="number" min="1" max="5" placeholder="1 to 5" />
       `,
@@ -72,22 +71,13 @@ const CountriesCard = ({ image, name, population, region, capital }) => {
 
   return (
     <div className="bg-white shadow-md rounded overflow-hidden hover:shadow-xl transition transform hover:scale-105">
-      <img
-        src={image}
-        alt={`${name} flag`}
-        className="w-full h-40 object-cover"
-      />
+      <img src={image} alt={`${name} flag`} className="w-full h-40 object-cover" />
       <div className="p-4 space-y-1">
         <h2 className="text-lg font-bold">{name}</h2>
         <p><strong>Population:</strong> {population}</p>
         <p><strong>Region:</strong> {region}</p>
-        <p><strong>Capital:</strong> {capital}</p>
-
-        {/* Clickable heart and text */}
-        <div
-          onClick={handleOpenSweetAlert}
-          className="flex items-center mt-4 cursor-pointer select-none"
-        >
+        <p><strong>Capital:</strong> {capital || "N/A"}</p>
+        <div onClick={handleOpenSweetAlert} className="flex items-center mt-4 cursor-pointer select-none">
           <span className="text-red-500 text-2xl">{isFavorite ? "❌" : "❤️"}</span>
           <span className="ml-2 text-gray-700 text-sm hover:underline">Add to Favorites</span>
         </div>

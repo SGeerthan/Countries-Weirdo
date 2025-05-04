@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useDrag, useDrop } from "react-dnd";
 import Confetti from "react-confetti";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  serverTimestamp,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const CountryCard = ({ country, isDisabled }) => {
@@ -66,22 +75,27 @@ const CountryGame = () => {
   const [scores, setScores] = useState([]);
   const [timeLeft, setTimeLeft] = useState(30);
   const [gameOver, setGameOver] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false); // Start control
+  const [gameStarted, setGameStarted] = useState(false);
+  const [scoreSaved, setScoreSaved] = useState(false); // to avoid double-saving
 
   const db = getFirestore();
 
   useEffect(() => {
     if (gameStarted && timeLeft > 0 && !gameOver) {
-      const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
+      const timer = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (gameStarted && timeLeft <= 0) {
+    } else if (gameStarted && timeLeft <= 0 && !scoreSaved) {
       setGameOver(true);
       saveScore(Object.keys(matched).length);
     }
   }, [timeLeft, gameOver, gameStarted]);
 
   useEffect(() => {
-    if (Object.keys(matched).length === countries.length && countries.length > 0) {
+    if (
+      Object.keys(matched).length === countries.length &&
+      countries.length > 0 &&
+      !scoreSaved
+    ) {
       setIsWinning(true);
       setGameOver(true);
       saveScore(countries.length);
@@ -92,9 +106,13 @@ const CountryGame = () => {
   useEffect(() => {
     if (showScores) {
       const fetchScores = async () => {
-        const q = query(collection(db, "gameScores"), orderBy("score", "desc"), limit(10));
+        const q = query(
+          collection(db, "gameScores"),
+          orderBy("score", "desc"),
+          limit(10)
+        );
         const snapshot = await getDocs(q);
-        const fetchedScores = snapshot.docs.map(doc => doc.data());
+        const fetchedScores = snapshot.docs.map((doc) => doc.data());
         setScores(fetchedScores);
       };
       fetchScores();
@@ -104,7 +122,7 @@ const CountryGame = () => {
   const handleDrop = (slotCountry, droppedName) => {
     if (gameOver) return;
     if (slotCountry.name === droppedName) {
-      setMatched(prev => ({ ...prev, [slotCountry.name]: true }));
+      setMatched((prev) => ({ ...prev, [slotCountry.name]: true }));
     }
   };
 
@@ -118,15 +136,16 @@ const CountryGame = () => {
     setTimeLeft(30);
     setIsWinning(false);
     setGameStarted(true);
+    setScoreSaved(false);
 
     axios.get("https://restcountries.com/v3.1/all").then((res) => {
-      const allCountries = res.data.map(c => ({
+      const allCountries = res.data.map((c) => ({
         name: c.name.common,
         flag: c.flags.svg,
       }));
       const selected = shuffleArray(allCountries).slice(0, 10);
       setCountries(selected);
-      setShuffledNames(shuffleArray(selected.map(c => ({ ...c }))));
+      setShuffledNames(shuffleArray(selected.map((c) => ({ ...c }))));
     });
   };
 
@@ -143,14 +162,24 @@ const CountryGame = () => {
       };
 
       addDoc(collection(db, "gameScores"), scoreData)
-        .then(() => console.log("Score saved!"))
+        .then(() => {
+          console.log("Score saved!");
+          setScoreSaved(true);
+        })
         .catch(console.error);
     }
   };
 
+  const resetGame = () => {
+    setGameStarted(false);
+    setCountries([]);
+    setShuffledNames([]);
+    setMatched({});
+    setShowScores(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-blue-800 p-8 relative">
-
       {!gameStarted && (
         <div className="flex justify-center items-center min-h-screen">
           <button
@@ -165,8 +194,7 @@ const CountryGame = () => {
       {gameStarted && (
         <>
           {isWinning && <Confetti recycle={false} numberOfPieces={800} />}
-          <h1 className="text-4xl font-bold text-center mb-6 text-transparent 
-            bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400 animate-pulse">
+          <h1 className="text-4xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400 animate-pulse">
             🌟 Flag Match Challenge 🌟
           </h1>
 
@@ -176,7 +204,9 @@ const CountryGame = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-7xl mx-auto">
             <div>
-              <h2 className="text-2xl text-white font-semibold mb-4 text-center">🧩 Match the Flags</h2>
+              <h2 className="text-2xl text-white font-semibold mb-4 text-center">
+                🧩 Match the Flags
+              </h2>
               <div className="grid grid-cols-2 gap-6">
                 {countries.map((country) => (
                   <FlagSlot
@@ -190,7 +220,9 @@ const CountryGame = () => {
               </div>
             </div>
             <div>
-              <h2 className="text-2xl text-white font-semibold mb-4 text-center">🎯 Drag Country Names</h2>
+              <h2 className="text-2xl text-white font-semibold mb-4 text-center">
+                🎯 Drag Country Names
+              </h2>
               <div className="grid grid-cols-2 gap-4">
                 {shuffledNames.map((country, i) => (
                   <CountryCard key={i} country={country} isDisabled={gameOver} />
@@ -199,20 +231,19 @@ const CountryGame = () => {
             </div>
           </div>
 
-          {gameOver && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-              <div className="text-4xl font-bold text-white text-center">
-                ⏰ Time's Up!<br />
+          {(gameOver || isWinning) && (
+            <div className="fixed inset-0 bg-black/70 flex flex-col gap-6 items-center justify-center z-50 text-white">
+              <div className="text-4xl font-bold text-center">
+                {isWinning ? "🎉 VICTORY! 🎊" : "⏰ Time's Up!"}
+                <br />
                 ✅ Your Score: {Object.keys(matched).length}
               </div>
-            </div>
-          )}
-
-          {isWinning && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-              <div className="text-6xl font-bold text-yellow-400 animate-bounce">
-                🎉 VICTORY! 🎊
-              </div>
+              <button
+                onClick={resetGame}
+                className="bg-pink-600 hover:bg-pink-700 px-6 py-3 rounded text-xl"
+              >
+                🔁 Close & Return to Start
+              </button>
             </div>
           )}
 
@@ -229,7 +260,9 @@ const CountryGame = () => {
           {showScores && (
             <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50">
               <div className="bg-white rounded-lg p-6 w-80 max-h-[80vh] overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4 text-center text-blue-700">🏅 Top Scores</h2>
+                <h2 className="text-xl font-bold mb-4 text-center text-blue-700">
+                  🏅 Top Scores
+                </h2>
                 <ul className="space-y-2">
                   {scores.map((score, index) => (
                     <li key={index} className="flex justify-between">
