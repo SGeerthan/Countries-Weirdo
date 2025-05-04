@@ -237,12 +237,12 @@ const TrendingPage = () => {
                       </div>
                     </div>
                   </div>
-                  <Link
+                  {/* <Link
                     to={`/countries/${country.country}`}
                     className="px-4 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full hover:brightness-110 transition"
                   >
                     View
-                  </Link>
+                  </Link> */}
                 </div>
 
                 <div className="mt-6">
