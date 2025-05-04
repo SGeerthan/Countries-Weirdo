@@ -6,9 +6,13 @@ import Footer from '../components/Footer'
 function MyFavouriteCountry() {
   return (
     <>
-    <UserHeader/>
-    <MyFavourite/>
-    <Footer/>
+     <div className="flex flex-col min-h-screen">
+      <UserHeader />
+      <main className="flex-grow">
+        <MyFavourite />
+      </main>
+      <Footer />
+    </div>
     </>
   )
 }
